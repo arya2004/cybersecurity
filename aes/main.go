@@ -55,9 +55,19 @@ func KeyGeneration(key uint16) (uint16, uint16, uint16) {
 	return key_0, key_1, key_2
 }
 
-func main() {
-	k0, k1, k2 := KeyGeneration(0b0100101011110101)
+func AES(plaintext uint16, key uint16) (cypherText uint16){
+	k0, k1, k2 := KeyGeneration(key)
 	fmt.Printf("Key0 = %04b %04b %04b %04b\n", k0>>12, (k0>>8)&0xF, (k0>>4)&0xF, k0&0xF)
 	fmt.Printf("Key1 = %04b %04b %04b %04b\n", k1>>12, (k1>>8)&0xF, (k1>>4)&0xF, k1&0xF)
 	fmt.Printf("Key2 = %04b %04b %04b %04b\n", k2>>12, (k2>>8)&0xF, (k2>>4)&0xF, k2&0xF)
+	
+	roundKey := plaintext ^ k0
+	fmt.Print(roundKey)
+	return roundKey
+
+}
+
+
+func main() {
+	AES(0b1101011100101000, 0b0100101011110101)
 }
