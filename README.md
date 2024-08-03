@@ -1,62 +1,54 @@
-# Cybersecurity Lab Go
+# Cybersecurity Lab Codes in Go
 
-## Overview
-
-This repository contains lab codes for a university-level cybersecurity course. All the codes are implemented in Go and cover a variety of topics related to cybersecurity. The labs are designed to provide hands-on experience and deepen understanding of the theoretical concepts discussed in lectures.
+Welcome to the Cybersecurity Lab Codes repository! This repository contains a collection of Go (Golang) programs designed to explore various aspects of cybersecurity. These programs are intended for educational purposes and can be used as part of cybersecurity labs, exercises, or research.
 
 ## Table of Contents
 
-- [Getting Started](#getting-started)
-- [Prerequisites](#prerequisites)
+- [Introduction](#introduction)
 - [Installation](#installation)
 - [Usage](#usage)
 - [Contributing](#contributing)
 - [License](#license)
 
-## Getting Started
+## Introduction
 
-To get started with these lab codes, you will need to clone this repository to your local machine.
-
-```sh
-git clone https://github.com/arya2004/cybersecurity.git
-cd cybersecurity
-```
-
-## Prerequisites
-
-Make sure you have Go installed on your machine. You can download it from the [official Go website](https://go.dev/dl/).
+This repository aims to provide hands-on experience with cybersecurity concepts using Go. Each program focuses on a specific area of cybersecurity, such as cryptography, network security, and vulnerability analysis. By working through these programs, users can gain a deeper understanding of how cybersecurity mechanisms are implemented and how to defend against various types of attacks.
 
 ## Installation
 
-After cloning the repository, navigate to the specific lab folder you want to work on and install the necessary dependencies.
+To get started with these programs, you need to have Go installed on your machine. Follow the instructions below to set up your environment:
 
-```sh
-cd lab-1
-go mod tidy
-```
+1. **Install Go**:
+   - Download and install Go from the official [Go website](https://golang.org/dl/).
+   - Follow the installation instructions for your operating system.
 
-Repeat the above steps for each lab folder.
+2. **Clone the repository**:
+   ```sh
+   git clone https://github.com/arya2004/cybersecurity.git
+   cd cybersecurity
+   ```
 
 ## Usage
 
-To run the codes for each lab, navigate to the respective lab directory and execute the Go files.
+Each program is located in its own directory. To run a program, navigate to its directory and use the following command:
 
 ```sh
 go run main.go
 ```
 
+
 ## Contributing
 
-Contributions are welcome! If you have any improvements or new lab ideas, feel free to fork the repository and submit a pull request.
+We welcome contributions from the community! If you have a program or improvement you'd like to share, please follow these steps:
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/NewLab`)
-3. Commit your changes (`git commit -m 'Add new lab'`)
-4. Push to the branch (`git push origin feature/NewLab`)
-5. Open a pull request
+1. Fork the repository.
+2. Create a new branch with a descriptive name.
+3. Make your changes and test thoroughly.
+4. Submit a pull request with a detailed description of your changes.
+
+Please ensure your code adheres to the Go coding standards and includes appropriate comments and documentation.
 
 ## License
 
-This project is licensed under the Apache License 2.0  - see the [LICENSE](LICENSE) file for details.
-
+This repository is licensed under the MIT License. See the [LICENSE](LICENSE) file for more information.
 
