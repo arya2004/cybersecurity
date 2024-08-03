@@ -1,73 +1,146 @@
 package main
 
-import (
-	"fmt"
-)
+import "fmt"
 
-var substitutionMap = map[uint8]uint8{
-	0b0000: 0b1001,
-	0b0001: 0b0100,
-	0b0010: 0b1010,
-	0b0011: 0b1011,
-	0b0100: 0b1101,
-	0b0101: 0b0001,
-	0b0110: 0b1000,
-	0b0111: 0b0101,
-	0b1000: 0b0110,
-	0b1001: 0b0010,
-	0b1010: 0b0000,
-	0b1011: 0b0011,
-	0b1100: 0b1100,
-	0b1101: 0b1110,
-	0b1110: 0b1111,
-	0b1111: 0b0111,
+type SimplifiedAES struct {
+	preRoundKey []int
+	round1Key   []int
+	round2Key   []int
 }
 
-func SwapNibble(byteVal uint8) uint8 {
-	return (byteVal << 4) | (byteVal >> 4)
+var sBox = [16]int{
+	0x9, 0x4, 0xA, 0xB, 0xD, 0x1, 0x8, 0x5, 0x6, 0x2, 0x0, 0x3, 0xC, 0xE, 0xF, 0x7,
 }
 
-func SubNibble(byteVal uint8) uint8 {
-	highNibble := byteVal >> 4
-	lowNibble := byteVal & 0x0F
-	subHigh := substitutionMap[highNibble]
-	subLow := substitutionMap[lowNibble]
-	return (subHigh << 4) | subLow
+var sBoxI = [16]int{
+	0xA, 0x5, 0x9, 0xB, 0x1, 0x7, 0x8, 0xF, 0x6, 0x0, 0x2, 0x3, 0xC, 0x4, 0xD, 0xE,
 }
 
-func KeyGeneration(key uint16) (uint16, uint16, uint16) {
-	word_0 := uint8(key >> 8)
-	word_1 := uint8(key & 0xFF)
-	fmt.Printf("Initial words: w0 = %08b, w1 = %08b\n", word_0, word_1)
-
-	word_2 := word_0 ^ 0b10000000 ^ SubNibble(SwapNibble(word_1))
-	word_3 := word_2 ^ word_1
-	fmt.Printf("Intermediate words after first round: w2 = %08b, w3 = %08b\n", word_2, word_3)
-
-	word_4 := word_2 ^ 0b00110000 ^ SubNibble(SwapNibble(word_3))
-	word_5 := word_4 ^ word_3
-	fmt.Printf("Intermediate words after second round: w4 = %08b, w5 = %08b\n", word_4, word_5)
-
-	key_0 := (uint16(word_0) << 8) | uint16(word_1)
-	key_1 := (uint16(word_2) << 8) | uint16(word_3)
-	key_2 := (uint16(word_4) << 8) | uint16(word_5)
-
-	return key_0, key_1, key_2
+func NewSimplifiedAES(key int) *SimplifiedAES {
+	preRoundKey, round1Key, round2Key := keyExpansion(key)
+	return &SimplifiedAES{
+		preRoundKey: preRoundKey,
+		round1Key:   round1Key,
+		round2Key:   round2Key,
+	}
 }
 
-func AES(plaintext uint16, key uint16) (cypherText uint16){
-	k0, k1, k2 := KeyGeneration(key)
-	fmt.Printf("Key0 = %04b %04b %04b %04b\n", k0>>12, (k0>>8)&0xF, (k0>>4)&0xF, k0&0xF)
-	fmt.Printf("Key1 = %04b %04b %04b %04b\n", k1>>12, (k1>>8)&0xF, (k1>>4)&0xF, k1&0xF)
-	fmt.Printf("Key2 = %04b %04b %04b %04b\n", k2>>12, (k2>>8)&0xF, (k2>>4)&0xF, k2&0xF)
-	
-	roundKey := plaintext ^ k0
-	fmt.Print(roundKey)
-	return roundKey
-
+func subWord(word int) int {
+	return (sBox[(word>>4)] << 4) + sBox[word&0x0F]
 }
 
+func rotWord(word int) int {
+	return ((word & 0x0F) << 4) + ((word & 0xF0) >> 4)
+}
+
+func keyExpansion(key int) ([]int, []int, []int) {
+	Rcon1 := 0x80
+	Rcon2 := 0x30
+
+	w := make([]int, 6)
+	w[0] = (key & 0xFF00) >> 8
+	w[1] = key & 0x00FF
+	w[2] = w[0] ^ (subWord(rotWord(w[1])) ^ Rcon1)
+	w[3] = w[2] ^ w[1]
+	w[4] = w[2] ^ (subWord(rotWord(w[3])) ^ Rcon2)
+	w[5] = w[4] ^ w[3]
+
+	return intToState((w[0] << 8) + w[1]), intToState((w[2] << 8) + w[3]), intToState((w[4] << 8) + w[5])
+}
+
+func gfMult(a, b int) int {
+	product := 0
+	a = a & 0x0F
+	b = b & 0x0F
+
+	for a != 0 && b != 0 {
+		if b&1 != 0 {
+			product = product ^ a
+		}
+		a = a << 1
+		if a&(1<<4) != 0 {
+			a = a ^ 0b10011
+		}
+		b = b >> 1
+	}
+
+	return product
+}
+
+func intToState(n int) []int {
+	return []int{(n >> 12) & 0xF, (n >> 4) & 0xF, (n >> 8) & 0xF, n & 0xF}
+}
+
+func stateToInt(m []int) int {
+	return (m[0] << 12) + (m[2] << 8) + (m[1] << 4) + m[3]
+}
+
+func addRoundKey(s1, s2 []int) []int {
+	result := make([]int, len(s1))
+	for i := range s1 {
+		result[i] = s1[i] ^ s2[i]
+	}
+	return result
+}
+
+func subNibbles(sbox [16]int, state []int) []int {
+	result := make([]int, len(state))
+	for i := range state {
+		result[i] = sbox[state[i]]
+	}
+	return result
+}
+
+func shiftRows(state []int) []int {
+	return []int{state[0], state[1], state[3], state[2]}
+}
+
+func mixColumns(state []int) []int {
+	return []int{
+		state[0] ^ gfMult(4, state[2]),
+		state[1] ^ gfMult(4, state[3]),
+		state[2] ^ gfMult(4, state[0]),
+		state[3] ^ gfMult(4, state[1]),
+	}
+}
+
+func inverseMixColumns(state []int) []int {
+	return []int{
+		gfMult(9, state[0]) ^ gfMult(2, state[2]),
+		gfMult(9, state[1]) ^ gfMult(2, state[3]),
+		gfMult(9, state[2]) ^ gfMult(2, state[0]),
+		gfMult(9, state[3]) ^ gfMult(2, state[1]),
+	}
+}
+
+func (saes *SimplifiedAES) Encrypt(plaintext int) int {
+	state := addRoundKey(saes.preRoundKey, intToState(plaintext))
+	state = mixColumns(shiftRows(subNibbles(sBox, state)))
+	state = addRoundKey(saes.round1Key, state)
+	state = shiftRows(subNibbles(sBox, state))
+	state = addRoundKey(saes.round2Key, state)
+	return stateToInt(state)
+}
+
+func (saes *SimplifiedAES) Decrypt(ciphertext int) int {
+	state := addRoundKey(saes.round2Key, intToState(ciphertext))
+	state = subNibbles(sBoxI, shiftRows(state))
+	state = inverseMixColumns(addRoundKey(saes.round1Key, state))
+	state = subNibbles(sBoxI, shiftRows(state))
+	state = addRoundKey(saes.preRoundKey, state)
+	return stateToInt(state)
+}
 
 func main() {
-	AES(0b1101011100101000, 0b0100101011110101)
+	key := 0b0100101011110101
+	plaintext := 0b1101011100101000
+	
+
+	saes := NewSimplifiedAES(key)
+
+	enc := saes.Encrypt(plaintext)
+	fmt.Printf("Encrypted: %016b\n", enc)
+
+	dec := saes.Decrypt(enc)
+	fmt.Printf("Decrypted: %016b\n", dec)
 }
