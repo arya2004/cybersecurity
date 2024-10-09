@@ -189,7 +189,7 @@ func calculateMD5(input string) string {
 }
 
 func main() {
-	input := "Hello, World!"
+	input := "The quick brown fox jumps over the lazy dog"
 	md5Hash := calculateMD5(input)
-	fmt.Println("MD5 Hash:", md5Hash)
+	fmt.Println("MD5 Hash for input:", input, "is:", md5Hash)
 }
