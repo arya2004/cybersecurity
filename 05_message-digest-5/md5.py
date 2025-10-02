@@ -1,7 +1,6 @@
 import math
 import struct
 
-# Shift amounts
 S = [
     7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22,
     5,  9, 14, 20, 5,  9, 14, 20, 5,  9, 14, 20, 5,  9, 14, 20,
@@ -11,7 +10,7 @@ S = [
 
 T = [int(abs(math.sin(i + 1)) * 2**32) & 0xFFFFFFFF for i in range(64)]
 
-# Non-linear functions
+
 def F(x, y, z): return (x & y) | (~x & z)
 def G(x, y, z): return (x & z) | (y & ~z)
 def H(x, y, z): return x ^ y ^ z
@@ -40,25 +39,28 @@ def md5_transform(input_bytes):
         M = list(struct.unpack('<16I', chunk))
         A, B, C, D = a, b, c, d
 
+        #  Round 1
         for j in range(16):
             k = j
             s = S[j]
             temp = (A + F(B, C, D) + M[k] + T[j]) & 0xFFFFFFFF
             A, D, C, B = D, C, B, (B + rotate_left(temp, s)) & 0xFFFFFFFF
 
-       
+        #  Round 2
         for j in range(16, 32):
             k = (5*j + 1) % 16
             s = S[j]
             temp = (A + G(B, C, D) + M[k] + T[j]) & 0xFFFFFFFF
             A, D, C, B = D, C, B, (B + rotate_left(temp, s)) & 0xFFFFFFFF
 
+        #  Round 3
         for j in range(32, 48):
             k = (3*j + 5) % 16
             s = S[j]
             temp = (A + H(B, C, D) + M[k] + T[j]) & 0xFFFFFFFF
             A, D, C, B = D, C, B, (B + rotate_left(temp, s)) & 0xFFFFFFFF
 
+        # Round 4
         for j in range(48, 64):
             k = (7*j) % 16
             s = S[j]
@@ -71,6 +73,7 @@ def md5_transform(input_bytes):
         d = (d + D) & 0xFFFFFFFF
 
     return struct.pack('<4I', a, b, c, d)
+
 
 # Calculatate MD5 hash 
 def calculate_md5(input_str):
